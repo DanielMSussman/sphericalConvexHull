@@ -3,13 +3,37 @@
 #include "sphericalDomain.h"
 using namespace std;
 
+void printdVec(dVec &b)
+    {
+    cout <<"{"<<b.x[0]<<","<<b.x[1]<<","<<b.x[2] << "}";
+    }
+
+void readTextFile(string filename, vector<dVec> &a)
+    {
+    ifstream loadFile(filename);
+    string fileLine;
+
+    while(getline(loadFile,fileLine))
+        {
+        istringstream iss(fileLine);
+        double x,y,z;
+        dVec entry;
+        //throw exception if the file isn't properly formatted
+        if(!(iss >> x >>y>>z))
+            throw std::exception();
+        entry.x[0]=x;
+        entry.x[1]=y;
+        entry.x[2]=z;
+        a.push_back(entry);
+        }
+    };
 
 void printdVecVectorToScreen(vector<dVec> &a)
     {
     cout <<"{";
     for (int ii = 0; ii < a.size();++ii)
         {
-        cout <<"{"<<a[ii].x[0]<<","<<a[ii].x[1]<<","<<a[ii].x[2] << "}";
+        printdVec(a[ii]);
         if(ii != a.size()-1)
             cout <<",";
         }
@@ -38,7 +62,7 @@ int main(int argc, char*argv[])
     vector<dVec> cellCentroids;
     //for example: choose random cell positions and project them onto a sphere of given radius
     double radius = 3.7;
-    sphericalDomain sphere(radius);
+    /*
     for (int ii = 0; ii < nCells; ++ii)
         {
         dVec point;
@@ -53,6 +77,15 @@ int main(int argc, char*argv[])
  
         cellCentroids.push_back(point);
         };
+    */
+    //load file
+    readTextFile("../data/nuclei_centroids.txt",cellCentroids);
+    nCells = cellCentroids.size();
+    //assume that all points are on a sphere whose center is the origin and whose radius is given by the norm of the first element
+    radius = sqrt(cellCentroids[0].x[0]*cellCentroids[0].x[0]+cellCentroids[0].x[1]*cellCentroids[0].x[1]+cellCentroids[0].x[2]*cellCentroids[0].x[2]);
+    sphericalDomain sphere(radius);
+    for (int ii = 0; ii < nCells; ++ii)
+        sphere.putInBoxReal(cellCentroids[ii]);
 
     vector<int> cellCellNeighbors;
     vector<unsigned int> numberOfCellNeighbors;
@@ -74,8 +107,8 @@ int main(int argc, char*argv[])
                                                    numberOfVertexNeighbors,
                                                    vertexNeighborIndexer);
 
-   printdVecVectorToScreen(cellCentroids);
-   printdVecVectorToScreen(vertexPositions);
+    printdVecVectorToScreen(cellCentroids);
+    printdVecVectorToScreen(vertexPositions);
     printIntVector(vertexVertexNeighbors);
     return 0;
 };
